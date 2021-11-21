@@ -33,8 +33,8 @@ public class ClientActor extends AbstractActor {
 		}
 		
 		private void Connexion() {
-			//CompletionStage<Object> result = banque.ask(arbitreActor, new ArbitreActor.StartGame(), Duration.ofSeconds(10));
-			//this.banque.tell(new ClientActor.Connexion(), ActorRef.noSender());
+			CompletionStage<Object> result = Patterns.ask(banque, new ClientActor.Connexion(), Duration.ofSeconds(10));
+			this.banque.tell(new ClientActor.Connexion(), ActorRef.noSender());
 		}
 		
 		private void Start() {

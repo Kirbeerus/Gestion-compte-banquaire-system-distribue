@@ -26,7 +26,7 @@ public class BanqueActor extends AbstractActor {
 		@Override
 		public Receive createReceive() {
 			return receiveBuilder()
-					.match(ClientActor.Connexion.class, message -> Connexion())
+					.match(ClientActor.Connexion.class, message -> Connexion(getSender()))
 					.match(ClientActor.Ajout.class, message -> Ajout(message))
 					.match(ClientActor.Retrait.class, message -> Retrait(message))
 					.match(BanquierActor.AjoutBanquier.class, message -> AjoutBanquier(message))
@@ -34,8 +34,8 @@ public class BanqueActor extends AbstractActor {
 					.build();
 		}
 		
-		private void Connexion() {
-			//getContext().getSender().tell(message, getContext());
+		private void Connexion(ActorRef respondTo) {
+			respondTo.tell(this.compte, getSelf());
 		}
 		
 		private void Ajout(final ClientActor.Ajout message) {

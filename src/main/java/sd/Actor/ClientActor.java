@@ -17,14 +17,14 @@ public class ClientActor extends AbstractActor {
 	
 	public ClientActor(ActorRef banque) {
 		this.banque = banque;
-		this.compte = new Compte(1500);
+		this.compte = null;
 	}
 	
 	// Méthode servant à déterminer le comportement de l'acteur lorsqu'il reçoit un message
 		@Override
 		public Receive createReceive() {
 			return receiveBuilder()
-					.match(Connexion.class, message -> Start())
+					.match(Connexion.class, message -> Connexion())
 					.match(Start.class, message -> Start())
 					.match(Ajout.class, message -> Ajout(message))
 					.match(Retrait.class, message -> Retrait(message))
@@ -34,12 +34,18 @@ public class ClientActor extends AbstractActor {
 		
 		private void Connexion() {
 			CompletionStage<Object> result = Patterns.ask(banque, new ClientActor.Connexion(), Duration.ofSeconds(10));
-			this.banque.tell(new ClientActor.Connexion(), ActorRef.noSender());
+			 try {
+					this.compte = (Compte) result.toCompletableFuture().get();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
 		}
 		
 		private void Start() {
 			this.banque.tell(new ClientActor.Ajout(500,this.compte), getSender());
-			this.banque.tell(new ClientActor.Retrait(5000,this.compte), getSender());
+			this.banque.tell(new ClientActor.Retrait(200,this.compte), getSender());
 		}
 		
 		private void Ajout(final Ajout message) {

@@ -17,10 +17,14 @@ public class App {
 		ActorSystem actorSystem = ActorSystem.create();
      
         ActorRef banque = actorSystem.actorOf(BanqueActor.props());
-        ActorRef client = actorSystem.actorOf(Props.create(ClientActor.class,banque));
+        ActorRef client = actorSystem.actorOf(ClientActor.props(banque));
         
         client.tell(new ClientActor.Connexion(), ActorRef.noSender());
-        client.tell(new ClientActor.Start(), ActorRef.noSender());
+        
+        	client.tell(new ClientActor.StartAjout(), ActorRef.noSender());
+
+        
+        //client.tell(new ClientActor.AfficherSolde(), ActorRef.noSender());
                 
         // Arrêt du système d'acteurs
         actorSystem.terminate();

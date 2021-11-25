@@ -24,16 +24,17 @@ public class BanquierActor extends AbstractActor{
 			
 
 			private void Ajout(final ClientActor.Ajout message) {
-				getContext().parent().tell(new AjoutBanquier(message.montantAjout), getContext().parent());
+				//Le banquier accepte le message d'ajout du client et  dit à la banque d'ajouter l'argent sur le compte
+				getContext().parent().forward(new AjoutBanquier(message.montantAjout,message.compte), getContext()); 
 			}
 
 			private void Retrait(final ClientActor.Retrait message) {
-				int sommeCompte = message.compte.getSomme();
-				if(sommeCompte>=message.montantRetrait) {
-					getContext().parent().tell(new RetraitBanquier(message.montantRetrait), getContext().parent());
+				int sommeCompte = message.compte.getSomme();	//On récupère la somme sur le compte
+				if(sommeCompte>=message.montantRetrait) {	//Si il n'y a pas assez d'argent sur le compte on annule le retrait
+					//Le banquier accepte le message de retrait du client et  dit à la banque de retirer l'argent du compte
+					getContext().parent().forward(new RetraitBanquier(message.montantRetrait), getContext()); 				
 				}else {
-					//getSender().tell(new SommeInssufisante(), getSender());
-					System.out.println("Pas assez d'argent sur le compte pour un retrait d'une tel somme");
+					System.out.println("Pas assez d'argent sur le compte pour un retrait d'une telle somme");
 				}
 				
 			}
@@ -57,10 +58,12 @@ public class BanquierActor extends AbstractActor{
 			}	
 			
 			public static class AjoutBanquier implements Message {
-				public final int montantAjout;
+				public int montantAjout;
+				public Compte compte;
 
-				public AjoutBanquier(int montantAjout) {
+				public AjoutBanquier(int montantAjout,Compte compte) {
 					this.montantAjout = montantAjout;
+					this.compte = compte;
 				}
 			}	
 			

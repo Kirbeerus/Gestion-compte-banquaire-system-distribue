@@ -1,5 +1,6 @@
 package sd.Actor;
 
+
 import akka.actor.AbstractActor;
 import akka.actor.Props;
 import akka.pattern.Patterns;
@@ -25,15 +26,17 @@ public class ClientActor extends AbstractActor {
 		public Receive createReceive() {
 			return receiveBuilder()
 					.match(Connexion.class, message -> Connexion())
-					.match(Start.class, message -> Start())
+					.match(StartAjout.class, message -> StartAjout())
+					.match(StartRetirer.class, message -> StartRetirer())
 					.match(Ajout.class, message -> Ajout(message))
 					.match(Retrait.class, message -> Retrait(message))
-					.match(BanquierActor.SommeInssufisante.class, message -> SommeInssufisante(message))
+					.match(AfficherSolde.class, message -> AfficherSolde())
 					.build();
 		}
 		
+		
 		private void Connexion() {
-			CompletionStage<Object> result = Patterns.ask(banque, new ClientActor.Connexion(), Duration.ofSeconds(10));
+			CompletionStage<Object> result = Patterns.ask(this.banque, new ClientActor.Connexion(), Duration.ofSeconds(10));
 			 try {
 					this.compte = (Compte) result.toCompletableFuture().get();
 				} catch (InterruptedException e) {
@@ -43,27 +46,55 @@ public class ClientActor extends AbstractActor {
 				}
 		}
 		
-		private void Start() {
-			this.banque.tell(new ClientActor.Ajout(500,this.compte), getSender());
-			this.banque.tell(new ClientActor.Retrait(200,this.compte), getSender());
+		private void StartAjout() {
+
+				//On demande à la banque d'ajouter de l'argent au compte et on attend le nouveau solde du compte en retour
+				CompletionStage<Object> resultatAjout = Patterns.ask(this.banque, new ClientActor.Ajout(500,this.compte), Duration.ofSeconds(10));
+				 try {
+					 	//On récupère le compte avec le nouveau solde
+						this.compte = (Compte) resultatAjout.toCompletableFuture().get();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						e.printStackTrace();
+					}
+				 System.out.println(this.compte.getSomme());
+				
+			}
+		
+		private void StartRetirer() {
+			//On demande à la banque de retirer de l'argent au compte et on attend le nouveau solde du compte en retour
+			 CompletionStage<Object> resultatRetrait = Patterns.ask(this.banque, new ClientActor.Retrait(200,this.compte), Duration.ofSeconds(10));
+			 try {
+				//On récupère le compte avec le nouveau solde
+					this.compte = (Compte) resultatRetrait.toCompletableFuture().get();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
+
+			 System.out.println(this.compte.getSomme());
+		}
+			
+		
+		private void AfficherSolde() {
+			System.out.println(this.compte.getSomme());
 		}
 		
 		private void Ajout(final Ajout message) {
-			System.out.println("Hello World to ");
+			//System.out.println("Hello World to ");
 		}
 
 		private void Retrait(final Retrait message) {
-			System.out.println("Bye World");
+			//System.out.println("Bye World");
 		}
 		
-		private void SommeInssufisante(final BanquierActor.SommeInssufisante message) {
-			System.out.println(message.message);
-		}
 		
 		
 		// Méthode servant à la création d'un acteur
-		public static Props props() {
-			return Props.create(ClientActor.class);
+		public static Props props(ActorRef banque) {
+			return Props.create(ClientActor.class,banque);
 		} 
 		
 		
@@ -74,8 +105,12 @@ public class ClientActor extends AbstractActor {
 			public Connexion() {}
 		}	
 		
-		public static class Start implements Message {
-			public Start() {}
+		public static class StartAjout implements Message {
+			public StartAjout() {}
+		}
+		
+		public static class StartRetirer implements Message {
+			public StartRetirer() {}
 		}
 		
 		public static class Ajout implements Message {
@@ -97,5 +132,10 @@ public class ClientActor extends AbstractActor {
 				this.montantRetrait = montantRetrait;
 			}
 		}
+		
+		public static class AfficherSolde implements Message {
+			public AfficherSolde() {}
+		}
+		
 	
 }

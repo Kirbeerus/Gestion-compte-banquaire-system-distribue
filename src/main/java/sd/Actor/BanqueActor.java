@@ -6,6 +6,7 @@ import java.util.HashMap;
 import akka.actor.AbstractActor;
 import akka.actor.Props;
 import akka.actor.ActorRef;
+import java.sql.*;
 
 
 public class BanqueActor extends AbstractActor {
@@ -29,13 +30,13 @@ public class BanqueActor extends AbstractActor {
 					.match(ClientActor.Connexion.class, message -> Connexion(getSender()))
 					.match(ClientActor.Ajout.class, message -> Ajout(message))
 					.match(ClientActor.Retrait.class, message -> Retrait(message))
-					.match(BanquierActor.AjoutBanquier.class, message -> AjoutBanquier(message))
-					.match(BanquierActor.RetraitBanquier.class, message -> RetraitBanquier(message))
+					.match(BanquierActor.AjoutBanquier.class, message -> AjoutBanquier(message,getSender()))
+					.match(BanquierActor.RetraitBanquier.class, message -> RetraitBanquier(message,getSender()))
 					.build();
 		}
 		
-		private void Connexion(ActorRef respondTo) {
-			respondTo.tell(this.compte, getSelf());
+		private void Connexion(ActorRef client) {
+			client.tell(this.compte, getSelf());
 		}
 		
 		private void Ajout(final ClientActor.Ajout message) {
@@ -47,14 +48,14 @@ public class BanqueActor extends AbstractActor {
 			this.banquierListe.get(0).forward(message, getContext());
 		}
 		
-		private void AjoutBanquier(final BanquierActor.AjoutBanquier message) {
+		private void AjoutBanquier(final BanquierActor.AjoutBanquier message,ActorRef client) {
 			this.compte.AjouterMontant(message.montantAjout);
-			System.out.println(this.compte.getSomme());
+			client.tell(this.compte,getSelf()); //On renvoie au client son compte mis a jour avec la nouvelle somme
 		}
 
-		private void RetraitBanquier(final BanquierActor.RetraitBanquier message) {
+		private void RetraitBanquier(final BanquierActor.RetraitBanquier message,ActorRef client) {
 			this.compte.RetraitMontant(message.montantRetrait);
-			System.out.println(this.compte.getSomme());
+			client.tell(this.compte,getSelf());	//On renvoie au client son compte mis a jour avec la nouvelle somme
 		}
 		
 		

@@ -13,13 +13,15 @@ import java.util.concurrent.ExecutionException;
 
 public class ClientActor extends AbstractActor {
 
+	private int id;
 	private ActorRef banque;
 	private Compte compte; 
 	private long time;
 	
-	public ClientActor(ActorRef banque) {
+	public ClientActor(ActorRef banque,int id) {
 		this.banque = banque;
 		this.compte = null;
+		this.id = id;
 	}
 	
 	// Méthode servant à déterminer le comportement de l'acteur lorsqu'il reçoit un message
@@ -37,7 +39,7 @@ public class ClientActor extends AbstractActor {
 		
 		
 		private void Connexion() {
-			CompletionStage<Object> result = Patterns.ask(this.banque, new ClientActor.Connexion(), Duration.ofSeconds(10));
+			CompletionStage<Object> result = Patterns.ask(this.banque, new ClientActor.Connexion(this.id), Duration.ofSeconds(10));
 			 try {
 					this.compte = (Compte) result.toCompletableFuture().get();
 				} catch (InterruptedException e) {
@@ -98,8 +100,8 @@ public class ClientActor extends AbstractActor {
 		
 		
 		// Méthode servant à la création d'un acteur
-		public static Props props(ActorRef banque) {
-			return Props.create(ClientActor.class,banque);
+		public static Props props(ActorRef banque, int id) {
+			return Props.create(ClientActor.class,banque,id);
 		} 
 		
 		
@@ -107,7 +109,11 @@ public class ClientActor extends AbstractActor {
 		public interface Message {}
 		
 		public static class Connexion implements Message {
-			public Connexion() {}
+			public int id;
+			
+			public Connexion(int id) {
+				this.id = id;
+			}
 		}	
 		
 		public static class StartAjout implements Message {

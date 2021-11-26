@@ -11,23 +11,24 @@ import java.sql.*;
 
 public class BanqueActor extends AbstractActor {
 
-	private Compte compte;
 	private ArrayList<ActorRef> banquierListe;
-	private HashMap<Integer,ActorRef> clientConnecterListe;
+	private Connection connexion;
+	private Statement statement;
 	
-	public BanqueActor() {
-		this.compte = new Compte(1500);
+	public BanqueActor() throws SQLException {
 		this.banquierListe = new ArrayList<>();
 		this.banquierListe.add(getContext().actorOf(BanquierActor.props(), "banquier1"));
 		this.banquierListe.add(getContext().actorOf(BanquierActor.props(), "banquier2"));
-		this.clientConnecterListe = new HashMap<>();
+		this.connexion = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestionbancaire","root","");
+		this.statement = connexion.createStatement();
+		
 	}
 
 	// Méthode servant à déterminer le comportement de l'acteur lorsqu'il reçoit un message
 		@Override
 		public Receive createReceive() {
 			return receiveBuilder()
-					.match(ClientActor.Connexion.class, message -> Connexion(getSender()))
+					.match(ClientActor.Connexion.class, message -> Connexion(getSender(),message))
 					.match(ClientActor.Ajout.class, message -> Ajout(message))
 					.match(ClientActor.Retrait.class, message -> Retrait(message))
 					.match(BanquierActor.AjoutBanquier.class, message -> AjoutBanquier(message,getSender()))
@@ -35,8 +36,10 @@ public class BanqueActor extends AbstractActor {
 					.build();
 		}
 		
-		private void Connexion(ActorRef client) {
-			client.tell(this.compte, getSelf());
+		private void Connexion(ActorRef client,final ClientActor.Connexion message) throws SQLException {
+			ResultSet res = statement.executeQuery("select * from compte where client="+message.id+";");
+			res.next();
+			client.tell(new Compte((Integer.parseInt(res.getString("solde"))),(Integer.parseInt(res.getString("id")))), getSelf());
 		}
 		
 		private void Ajout(final ClientActor.Ajout message) {
@@ -48,14 +51,34 @@ public class BanqueActor extends AbstractActor {
 			this.banquierListe.get(0).forward(message, getContext());
 		}
 		
-		private void AjoutBanquier(final BanquierActor.AjoutBanquier message,ActorRef client) {
-			this.compte.AjouterMontant(message.montantAjout);
-			client.tell(this.compte,getSelf()); //On renvoie au client son compte mis a jour avec la nouvelle somme
+		private void AjoutBanquier(final BanquierActor.AjoutBanquier message,ActorRef client) throws SQLException {
+			ResultSet res = this.statement.executeQuery("select * from compte where id=1;");
+			res.next();
+			
+			PreparedStatement preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
+		    preparedStmt.setInt(1,(Integer.parseInt(res.getString("solde"))+message.montantAjout));
+		    preparedStmt.setInt(2, message.compte.getId());
+
+		    // execute the java preparedstatement
+		    preparedStmt.executeUpdate();
+		    
+			message.compte.AjouterMontant(message.montantAjout);
+			client.tell(message.compte,getSelf()); //On renvoie au client son compte mis a jour avec la nouvelle somme
 		}
 
-		private void RetraitBanquier(final BanquierActor.RetraitBanquier message,ActorRef client) {
-			this.compte.RetraitMontant(message.montantRetrait);
-			client.tell(this.compte,getSelf());	//On renvoie au client son compte mis a jour avec la nouvelle somme
+		private void RetraitBanquier(final BanquierActor.RetraitBanquier message,ActorRef client) throws SQLException {
+			ResultSet res = this.statement.executeQuery("select * from compte where id=1;");
+			res.next();
+			
+			PreparedStatement preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
+		    preparedStmt.setInt(1,(Integer.parseInt(res.getString("solde"))+message.montantRetrait));
+		    preparedStmt.setInt(2, message.compte.getId());
+
+		    // execute the java preparedstatement
+		    preparedStmt.executeUpdate();
+			
+			message.compte.RetraitMontant(message.montantRetrait);
+			client.tell(message.compte,getSelf());	//On renvoie au client son compte mis a jour avec la nouvelle somme
 		}
 		
 		

@@ -32,7 +32,7 @@ public class BanquierActor extends AbstractActor{
 				int sommeCompte = message.compte.getSomme();	//On récupère la somme sur le compte
 				if(sommeCompte>=message.montantRetrait) {	//Si il n'y a pas assez d'argent sur le compte on annule le retrait
 					//Le banquier accepte le message de retrait du client et  dit à la banque de retirer l'argent du compte
-					getContext().parent().forward(new RetraitBanquier(message.montantRetrait), getContext()); 				
+					getContext().parent().forward(new RetraitBanquier(message.montantRetrait,message.compte), getContext()); 				
 				}else {
 					System.out.println("Pas assez d'argent sur le compte pour un retrait d'une telle somme");
 				}
@@ -69,9 +69,11 @@ public class BanquierActor extends AbstractActor{
 			
 			public static class RetraitBanquier implements Message {
 				public final int montantRetrait;
-
-				public RetraitBanquier(int montantRetrait) {
+				public Compte compte;
+				
+				public RetraitBanquier(int montantRetrait,Compte compte) {
 					this.montantRetrait = montantRetrait;
+					this.compte = compte;
 				}
 			}
 	

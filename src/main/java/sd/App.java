@@ -17,13 +17,13 @@ public class App {
 		ActorSystem actorSystem = ActorSystem.create();
      
         ActorRef banque = actorSystem.actorOf(BanqueActor.props());
-        ActorRef client = actorSystem.actorOf(ClientActor.props(banque));
+        ActorRef client = actorSystem.actorOf(ClientActor.props(banque,1));
         
-        client.tell(new ClientActor.Connexion(), ActorRef.noSender());
+        client.tell(new ClientActor.Connexion(0), ActorRef.noSender());
         
         long startTime = System.currentTimeMillis();
         
-        for(int i = 0;i<100000;i++) {
+        for(int i = 0;i<100;i++) {
         	client.tell(new ClientActor.StartAjout(), ActorRef.noSender());
         }
         

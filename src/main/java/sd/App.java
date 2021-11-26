@@ -21,11 +21,23 @@ public class App {
         
         client.tell(new ClientActor.Connexion(), ActorRef.noSender());
         
+        long startTime = System.currentTimeMillis();
+        
+        for(int i = 0;i<100000;i++) {
         	client.tell(new ClientActor.StartAjout(), ActorRef.noSender());
+        }
+        
+
+        try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+        
+        client.tell(new ClientActor.AfficherSolde(startTime), ActorRef.noSender());
+        
 
         
-        //client.tell(new ClientActor.AfficherSolde(), ActorRef.noSender());
-                
         // Arrêt du système d'acteurs
         actorSystem.terminate();
 	}

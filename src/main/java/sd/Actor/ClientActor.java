@@ -15,6 +15,7 @@ public class ClientActor extends AbstractActor {
 
 	private ActorRef banque;
 	private Compte compte; 
+	private long time;
 	
 	public ClientActor(ActorRef banque) {
 		this.banque = banque;
@@ -30,7 +31,7 @@ public class ClientActor extends AbstractActor {
 					.match(StartRetirer.class, message -> StartRetirer())
 					.match(Ajout.class, message -> Ajout(message))
 					.match(Retrait.class, message -> Retrait(message))
-					.match(AfficherSolde.class, message -> AfficherSolde())
+					.match(AfficherSolde.class, message -> AfficherSolde(message))
 					.build();
 		}
 		
@@ -49,37 +50,41 @@ public class ClientActor extends AbstractActor {
 		private void StartAjout() {
 
 				//On demande à la banque d'ajouter de l'argent au compte et on attend le nouveau solde du compte en retour
-				CompletionStage<Object> resultatAjout = Patterns.ask(this.banque, new ClientActor.Ajout(500,this.compte), Duration.ofSeconds(10));
+				CompletionStage<Object> resultatAjout = Patterns.ask(this.banque, new ClientActor.Ajout(500,this.compte), Duration.ofSeconds(100));
 				 try {
 					 	//On récupère le compte avec le nouveau solde
-						this.compte = (Compte) resultatAjout.toCompletableFuture().get();
+					 	this.compte = (Compte) resultatAjout.toCompletableFuture().get();
+					 	time = System.currentTimeMillis();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					} catch (ExecutionException e) {
 						e.printStackTrace();
 					}
-				 System.out.println(this.compte.getSomme());
+				//banque.tell(new ClientActor.Ajout(500,this.compte),getSelf());
+				 //System.out.println(this.compte.getSomme());
 				
 			}
 		
 		private void StartRetirer() {
 			//On demande à la banque de retirer de l'argent au compte et on attend le nouveau solde du compte en retour
-			 CompletionStage<Object> resultatRetrait = Patterns.ask(this.banque, new ClientActor.Retrait(200,this.compte), Duration.ofSeconds(10));
+			 CompletionStage<Object> resultatRetrait = Patterns.ask(this.banque, new ClientActor.Retrait(200,this.compte), Duration.ofSeconds(100));
 			 try {
 				//On récupère le compte avec le nouveau solde
 					this.compte = (Compte) resultatRetrait.toCompletableFuture().get();
+					time = System.currentTimeMillis();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				} catch (ExecutionException e) {
 					e.printStackTrace();
 				}
 
-			 System.out.println(this.compte.getSomme());
+			 //System.out.println(this.compte.getSomme());
 		}
 			
 		
-		private void AfficherSolde() {
-			System.out.println(this.compte.getSomme());
+		private void AfficherSolde(final AfficherSolde message) {
+			System.out.println(this.compte.getSomme()+"\n Temps d'exécution : "+(this.time-message.temps)+" Milliseconds");
+			
 		}
 		
 		private void Ajout(final Ajout message) {
@@ -134,7 +139,10 @@ public class ClientActor extends AbstractActor {
 		}
 		
 		public static class AfficherSolde implements Message {
-			public AfficherSolde() {}
+			private long temps;
+			public AfficherSolde(long temps) {
+				this.temps = temps;
+			}
 		}
 		
 	

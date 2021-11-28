@@ -2,16 +2,18 @@ package sd.Actor;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
+import sd.Actor.BanqueActor.Enregistrement;
+import sd.Actor.BanqueActor.Message;
 import akka.actor.ActorRef;
 
 
 public class BanquierActor extends AbstractActor{
 
-	/*ActorRef banque;
+	private ActorRef persistanceListe;
 	
-	public BanquierActor(ActorRef banque) {
-		this.banque = banque;
-	}*/
+	public BanquierActor(){
+		//this.persistanceListe = ;
+	}
 	
 	// Méthode servant à déterminer le comportement de l'acteur lorsqu'il reçoit un message
 			@Override
@@ -26,6 +28,9 @@ public class BanquierActor extends AbstractActor{
 			private void Ajout(final ClientActor.Ajout message) {
 				//Le banquier accepte le message d'ajout du client et  dit à la banque d'ajouter l'argent sur le compte
 				getContext().parent().forward(new AjoutBanquier(message.montantAjout,message.compte), getContext()); 
+				//message.compte.AjouterMontant(message.montantAjout);
+				//this.persistanceListe.tell(new Enregistrement(message.compte), client);
+				//client.tell(message.compte,getSelf()); //On renvoie au client son compte mis a jour avec la nouvelle somme
 			}
 
 			private void Retrait(final ClientActor.Retrait message) {
@@ -73,6 +78,14 @@ public class BanquierActor extends AbstractActor{
 				
 				public RetraitBanquier(int montantRetrait,Compte compte) {
 					this.montantRetrait = montantRetrait;
+					this.compte = compte;
+				}
+			}	
+			
+			public static class Enregistrement implements Message {
+				public Compte compte;
+				
+				public Enregistrement(Compte compte) {
 					this.compte = compte;
 				}
 			}

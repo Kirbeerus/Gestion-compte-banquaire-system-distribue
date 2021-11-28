@@ -2,6 +2,7 @@ package sd;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Scanner;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
@@ -23,21 +24,26 @@ public class App {
         
         long startTime = System.currentTimeMillis();
         
-        for(int i = 0;i<100;i++) {
+        for(int i = 0;i<100000;i++) {
         	client.tell(new ClientActor.StartAjout(), ActorRef.noSender());
         }
         
-
-        try {
+        Scanner sc= new Scanner(System.in);    //System.in is a standard input stream  
+        String choix = "";
+        
+        while(!choix.equals("exit")) {
+        	System.out.println("Que voulez vous faire : ");
+        	choix = sc.nextLine();
+        }
+        
+        /*try {
 			Thread.sleep(10000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-		}
+		}*/
         
         client.tell(new ClientActor.AfficherSolde(startTime), ActorRef.noSender());
-        
-
-        
+                
         // Arrêt du système d'acteurs
         actorSystem.terminate();
 	}

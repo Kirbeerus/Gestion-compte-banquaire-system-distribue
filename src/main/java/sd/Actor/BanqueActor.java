@@ -3,8 +3,11 @@ package sd.Actor;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import akka.routing.BalancingPool;
+import akka . routing . RoundRobinPool ;
 import akka.actor.AbstractActor;
 import akka.actor.Props;
+import sd.Actor.ClientActor.Message;
 import akka.actor.ActorRef;
 import java.sql.*;
 
@@ -12,16 +15,22 @@ import java.sql.*;
 public class BanqueActor extends AbstractActor {
 
 	private ArrayList<ActorRef> banquierListe;
+	private ActorRef routerPersistance;
 	private Connection connexion;
 	private Statement statement;
+	private PreparedStatement preparedStmt;
 	
 	public BanqueActor() throws SQLException {
-		this.banquierListe = new ArrayList<>();
-		this.banquierListe.add(getContext().actorOf(BanquierActor.props(), "banquier1"));
-		this.banquierListe.add(getContext().actorOf(BanquierActor.props(), "banquier2"));
 		this.connexion = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestionbancaire","root","");
 		this.statement = connexion.createStatement();
+		this.preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
 		
+		this.banquierListe = new ArrayList<>();
+		ResultSet res = statement.executeQuery("select * from banquier;");
+		while(res.next()) {
+			this.banquierListe.add(getContext().actorOf(BanquierActor.props()));
+		}
+		this.routerPersistance = getContext().actorOf(new BalancingPool(50).props(PersistanceActor.props(this.connexion,this.statement,this.preparedStmt)));
 	}
 
 	// Méthode servant à déterminer le comportement de l'acteur lorsqu'il reçoit un message
@@ -52,32 +61,16 @@ public class BanqueActor extends AbstractActor {
 		}
 		
 		private void AjoutBanquier(final BanquierActor.AjoutBanquier message,ActorRef client) throws SQLException {
-			ResultSet res = this.statement.executeQuery("select * from compte where id=1;");
-			res.next();
 			
-			PreparedStatement preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
-		    preparedStmt.setInt(1,(Integer.parseInt(res.getString("solde"))+message.montantAjout));
-		    preparedStmt.setInt(2, message.compte.getId());
-
-		    // execute the java preparedstatement
-		    preparedStmt.executeUpdate();
-		    
 			message.compte.AjouterMontant(message.montantAjout);
+			this.routerPersistance.tell(new Enregistrement(message.compte), client);
 			client.tell(message.compte,getSelf()); //On renvoie au client son compte mis a jour avec la nouvelle somme
 		}
 
 		private void RetraitBanquier(final BanquierActor.RetraitBanquier message,ActorRef client) throws SQLException {
-			ResultSet res = this.statement.executeQuery("select * from compte where id=1;");
-			res.next();
-			
-			PreparedStatement preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
-		    preparedStmt.setInt(1,(Integer.parseInt(res.getString("solde"))+message.montantRetrait));
-		    preparedStmt.setInt(2, message.compte.getId());
-
-		    // execute the java preparedstatement
-		    preparedStmt.executeUpdate();
 			
 			message.compte.RetraitMontant(message.montantRetrait);
+			this.routerPersistance.tell(new Enregistrement(message.compte), client);
 			client.tell(message.compte,getSelf());	//On renvoie au client son compte mis a jour avec la nouvelle somme
 		}
 		
@@ -91,6 +84,13 @@ public class BanqueActor extends AbstractActor {
 		// Définition des messages en inner classes
 		public interface Message {}
 		
-	
+		public static class Enregistrement implements Message {
+			public Compte compte;
+			
+			public Enregistrement(Compte compte) {
+				this.compte = compte;
+			}
+		}
+		
 	
 }

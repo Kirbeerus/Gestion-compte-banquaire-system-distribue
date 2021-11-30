@@ -31,12 +31,12 @@ public class PersistanceActor extends AbstractActor{
 			@Override
 			public Receive createReceive() {
 				return receiveBuilder()
-						.match(BanqueActor.Enregistrement.class, message -> Enregistrement(message))
+						.match(BanquierActor.Enregistrement.class, message -> Enregistrement(message))
 						.build();
 			}
 			
 
-			private void Enregistrement(final BanqueActor.Enregistrement message) throws SQLException {
+			private void Enregistrement(final BanquierActor.Enregistrement message) throws SQLException {
 				preparedStmt.setInt(1,(message.compte.getSomme()));
 			    preparedStmt.setInt(2, message.compte.getId());
 			    preparedStmt.executeUpdate();

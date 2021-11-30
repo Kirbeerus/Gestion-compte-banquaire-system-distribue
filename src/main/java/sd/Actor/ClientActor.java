@@ -31,8 +31,6 @@ public class ClientActor extends AbstractActor {
 					.match(Connexion.class, message -> Connexion())
 					.match(StartAjout.class, message -> StartAjout())
 					.match(StartRetirer.class, message -> StartRetirer())
-					.match(Ajout.class, message -> Ajout(message))
-					.match(Retrait.class, message -> Retrait(message))
 					.match(AfficherSolde.class, message -> AfficherSolde(message))
 					.build();
 		}
@@ -87,14 +85,6 @@ public class ClientActor extends AbstractActor {
 		private void AfficherSolde(final AfficherSolde message) {
 			System.out.println(this.compte.getSomme()+"\n Temps d'exécution : "+(this.time-message.temps)+" Milliseconds");
 			
-		}
-		
-		private void Ajout(final Ajout message) {
-			//System.out.println("Hello World to ");
-		}
-
-		private void Retrait(final Retrait message) {
-			//System.out.println("Bye World");
 		}
 		
 		

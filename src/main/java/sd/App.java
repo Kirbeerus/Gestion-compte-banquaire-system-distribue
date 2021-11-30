@@ -24,7 +24,7 @@ public class App {
         
         long startTime = System.currentTimeMillis();
         
-        for(int i = 0;i<100000;i++) {
+        for(int i = 0;i<10000;i++) {
         	client.tell(new ClientActor.StartAjout(), ActorRef.noSender());
         }
         

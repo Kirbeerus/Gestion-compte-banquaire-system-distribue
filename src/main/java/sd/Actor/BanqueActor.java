@@ -25,12 +25,14 @@ public class BanqueActor extends AbstractActor {
 		this.statement = connexion.createStatement();
 		this.preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
 		
+		this.routerPersistance = getContext().actorOf(new BalancingPool(50).props(PersistanceActor.props(this.connexion,this.statement,this.preparedStmt)));		
+		
 		this.banquierListe = new ArrayList<>();
 		ResultSet res = statement.executeQuery("select * from banquier;");
 		while(res.next()) {
-			this.banquierListe.add(getContext().actorOf(BanquierActor.props()));
+			this.banquierListe.add(getContext().actorOf(BanquierActor.props(routerPersistance)));
 		}
-		this.routerPersistance = getContext().actorOf(new BalancingPool(50).props(PersistanceActor.props(this.connexion,this.statement,this.preparedStmt)));
+		
 	}
 
 	// Méthode servant à déterminer le comportement de l'acteur lorsqu'il reçoit un message
@@ -40,8 +42,6 @@ public class BanqueActor extends AbstractActor {
 					.match(ClientActor.Connexion.class, message -> Connexion(getSender(),message))
 					.match(ClientActor.Ajout.class, message -> Ajout(message))
 					.match(ClientActor.Retrait.class, message -> Retrait(message))
-					.match(BanquierActor.AjoutBanquier.class, message -> AjoutBanquier(message,getSender()))
-					.match(BanquierActor.RetraitBanquier.class, message -> RetraitBanquier(message,getSender()))
 					.build();
 		}
 		
@@ -51,27 +51,12 @@ public class BanqueActor extends AbstractActor {
 			client.tell(new Compte((Integer.parseInt(res.getString("solde"))),(Integer.parseInt(res.getString("id")))), getSelf());
 		}
 		
-		private void Ajout(final ClientActor.Ajout message) {
-			
+		private void Ajout(final ClientActor.Ajout message) {		
 			this.banquierListe.get(0).forward(message, getContext());
 		}
 
 		private void Retrait(final ClientActor.Retrait message) {
 			this.banquierListe.get(0).forward(message, getContext());
-		}
-		
-		private void AjoutBanquier(final BanquierActor.AjoutBanquier message,ActorRef client) throws SQLException {
-			
-			message.compte.AjouterMontant(message.montantAjout);
-			this.routerPersistance.tell(new Enregistrement(message.compte), client);
-			client.tell(message.compte,getSelf()); //On renvoie au client son compte mis a jour avec la nouvelle somme
-		}
-
-		private void RetraitBanquier(final BanquierActor.RetraitBanquier message,ActorRef client) throws SQLException {
-			
-			message.compte.RetraitMontant(message.montantRetrait);
-			this.routerPersistance.tell(new Enregistrement(message.compte), client);
-			client.tell(message.compte,getSelf());	//On renvoie au client son compte mis a jour avec la nouvelle somme
 		}
 		
 		
@@ -84,13 +69,4 @@ public class BanqueActor extends AbstractActor {
 		// Définition des messages en inner classes
 		public interface Message {}
 		
-		public static class Enregistrement implements Message {
-			public Compte compte;
-			
-			public Enregistrement(Compte compte) {
-				this.compte = compte;
-			}
-		}
-		
-	
 }

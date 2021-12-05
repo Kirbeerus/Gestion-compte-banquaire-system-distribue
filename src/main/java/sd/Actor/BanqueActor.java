@@ -14,23 +14,21 @@ import java.sql.*;
 
 public class BanqueActor extends AbstractActor {
 
-	private ArrayList<ActorRef> banquierListe;
+	private HashMap<Integer,ActorRef> banquierListe;
 	private ActorRef routerPersistance;
 	private Connection connexion;
 	private Statement statement;
-	private PreparedStatement preparedStmt;
 	
 	public BanqueActor() throws SQLException {
 		this.connexion = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestionbancaire","root","");
 		this.statement = connexion.createStatement();
-		this.preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
 		
-		this.routerPersistance = getContext().actorOf(new BalancingPool(50).props(PersistanceActor.props(this.connexion,this.statement,this.preparedStmt)));		
+		this.routerPersistance = getContext().actorOf(new BalancingPool(50).props(PersistanceActor.props(this.connexion,this.statement)));		
 		
-		this.banquierListe = new ArrayList<>();
+		this.banquierListe = new HashMap<Integer,ActorRef>();
 		ResultSet res = statement.executeQuery("select * from banquier;");
 		while(res.next()) {
-			this.banquierListe.add(getContext().actorOf(BanquierActor.props(routerPersistance)));
+			this.banquierListe.put(Integer.parseInt(res.getString("id")),getContext().actorOf(BanquierActor.props(routerPersistance)));
 		}
 		
 	}
@@ -48,15 +46,15 @@ public class BanqueActor extends AbstractActor {
 		private void Connexion(ActorRef client,final ClientActor.Connexion message) throws SQLException {
 			ResultSet res = statement.executeQuery("select * from compte where client="+message.id+";");
 			res.next();
-			client.tell(new Compte((Integer.parseInt(res.getString("solde"))),(Integer.parseInt(res.getString("id")))), getSelf());
+			client.tell(new Compte((Integer.parseInt(res.getString("solde"))),(Integer.parseInt(res.getString("id"))),(Integer.parseInt(res.getString("banquier")))), getSelf());
 		}
 		
 		private void Ajout(final ClientActor.Ajout message) {		
-			this.banquierListe.get(0).forward(message, getContext());
+			this.banquierListe.get(message.compte.getBanquier()).forward(message, getContext());
 		}
 
 		private void Retrait(final ClientActor.Retrait message) {
-			this.banquierListe.get(0).forward(message, getContext());
+			this.banquierListe.get(message.compte.getBanquier()).forward(message, getContext());
 		}
 		
 		

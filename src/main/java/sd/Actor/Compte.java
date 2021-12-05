@@ -3,14 +3,20 @@ package sd.Actor;
 public class Compte {
 	private int somme;
 	private int id;
+	private int banquier;
 	
-	public Compte(int somme,int id) {
+	public Compte(int somme,int id,int banquier) {
 		this.somme = somme;
 		this.id = id;
+		this.banquier = banquier;
 	}
 	
 	public int getSomme() {
 		return this.somme;
+	}
+	
+	public int getBanquier() {
+		return this.banquier;
 	}
 	
 	public int getId() {

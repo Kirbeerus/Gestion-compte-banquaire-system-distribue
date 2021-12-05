@@ -18,13 +18,10 @@ public class PersistanceActor extends AbstractActor{
 	private Statement statement;
 	private PreparedStatement preparedStmt;
 	
-	public PersistanceActor(Connection connexion, Statement statement,PreparedStatement preparedStmt) throws SQLException {
-		//this.connexion = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestionbancaire","root","");
-		//this.statement = connexion.createStatement();
-		//this.preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
+	public PersistanceActor(Connection connexion, Statement statement) throws SQLException {
 		this.connexion = connexion;
 		this.statement = statement;
-		this.preparedStmt = preparedStmt;
+		this.preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
 	}
 	
 	// Méthode servant à déterminer le comportement de l'acteur lorsqu'il reçoit un message
@@ -45,8 +42,8 @@ public class PersistanceActor extends AbstractActor{
 			
 			
 			// Méthode servant à la création d'un acteur
-			public static Props props(Connection connexion, Statement statement,PreparedStatement preparedStmt) {
-				return Props.create(PersistanceActor.class,connexion,statement,preparedStmt);
+			public static Props props(Connection connexion, Statement statement) {
+				return Props.create(PersistanceActor.class,connexion,statement);
 			}
 			
 

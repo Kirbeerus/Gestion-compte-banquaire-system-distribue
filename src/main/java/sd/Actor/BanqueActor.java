@@ -20,7 +20,8 @@ public class BanqueActor extends AbstractActor {
 	private Statement statement;
 	
 	public BanqueActor() throws SQLException {
-		this.connexion = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestionbancaire","root","");
+		//this.connexion = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestionbancaire","root","");  
+		this.connexion = DriverManager.getConnection("jdbc:mysql://db4free.net:3306/gestionbancaire","cb778525","cb778525");
 		this.statement = connexion.createStatement();
 		
 		this.routerPersistance = getContext().actorOf(new BalancingPool(50).props(PersistanceActor.props(this.connexion,this.statement)));		

@@ -83,7 +83,7 @@ public class ClientActor extends AbstractActor {
 			
 		
 		private void AfficherSolde(final AfficherSolde message) {
-			System.out.println(this.compte.getSomme()+"\n Temps d'exécution : "+(this.time-message.temps)+" Milliseconds");
+			System.out.println("Solde du compte "+this.compte.getId()+" : "+this.compte.getSomme());
 			
 		}
 		
@@ -135,9 +135,7 @@ public class ClientActor extends AbstractActor {
 		}
 		
 		public static class AfficherSolde implements Message {
-			private long temps;
-			public AfficherSolde(long temps) {
-				this.temps = temps;
+			public AfficherSolde() {
 			}
 		}
 		

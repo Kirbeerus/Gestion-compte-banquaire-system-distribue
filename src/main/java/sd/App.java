@@ -21,13 +21,18 @@ public class App {
         ActorRef banque = actorSystem.actorOf(BanqueActor.props());
         
         ArrayList<ActorRef> clientListe = new ArrayList<ActorRef>();
+        System.out.println("Les client ce connecte à la base de données");
         for(int i = 1;i<=10;i++) {
         	clientListe.add(actorSystem.actorOf(ClientActor.props(banque,i)));
         	clientListe.get(i-1).tell(new ClientActor.Connexion(0), ActorRef.noSender());
         }
         
-        long startTime = System.currentTimeMillis();
-        
+        try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+                
         String commande = "";
         Scanner scanner = new Scanner(System.in);  // Create a Scanner object
         while(!commande.equals("exit")) {
@@ -36,12 +41,10 @@ public class App {
         	System.out.println("---------------------------------------------------------------------------------------------------------");
         	commande = scanner.nextLine();
         	if(commande.equals("1")) {
-        		startTime = System.currentTimeMillis();
         		clientListe.get(0).tell(new ClientActor.StartAjout(), ActorRef.noSender());
         		clientListe.get(0).tell(new ClientActor.AfficherSolde(), ActorRef.noSender());  
         	}
 			if(commande.equals("2")) {
-				startTime = System.currentTimeMillis();
 				clientListe.get(0).tell(new ClientActor.StartRetirer(), ActorRef.noSender()); 
 				clientListe.get(0).tell(new ClientActor.AfficherSolde(), ActorRef.noSender());
 			}

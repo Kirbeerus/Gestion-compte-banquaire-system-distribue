@@ -37,7 +37,7 @@ public class ClientActor extends AbstractActor {
 		
 		
 		private void Connexion() {
-			CompletionStage<Object> result = Patterns.ask(this.banque, new ClientActor.Connexion(this.id), Duration.ofSeconds(10));
+			CompletionStage<Object> result = Patterns.ask(this.banque, new ClientActor.Connexion(this.id), Duration.ofSeconds(100));
 			 try {
 					this.compte = (Compte) result.toCompletableFuture().get();
 				} catch (InterruptedException e) {

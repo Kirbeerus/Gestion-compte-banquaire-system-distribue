@@ -11,15 +11,15 @@ import java.sql.*;
 
 public class BanqueActor extends AbstractActor {
 
-	private HashMap<Integer,ActorRef> banquierListe;
-	private ActorRef routerPersistance;
-	private Connection connexion;
-	private Statement statement;
+	private HashMap<Integer,ActorRef> banquierListe; //Liste de des banquier avec leurs id en clé
+	private ActorRef routerPersistance; //pool d'acteurs de persitances
+	private Connection connexion; //Connexion à la bdd
+	private Statement statement; //Permet d'éxécuter les query
 	
 	public BanqueActor() throws SQLException, ClassNotFoundException {
 		//this.connexion = DriverManager.getConnection("jdbc:mysql://localhost:3306/gestionbancaire","root","");  
 		try {
-			Class.forName("oracle.jdbc.driver.OracleDriver").newInstance();
+			Class.forName("oracle.jdbc.driver.OracleDriver").newInstance(); //On vérifie que l'on trouve le driver oracle
 		}
 		catch(ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
 			System.out.println("Error: unable to load driver class!");
@@ -27,6 +27,7 @@ public class BanqueActor extends AbstractActor {
 		}
 		Connection connexion = null;
 
+		//On créer la source de connexion à oracle
 		OracleDataSource ods = new OracleDataSource();
 		ods.setDriverType("thin");
 		ods.setServerName("butor");
@@ -37,24 +38,27 @@ public class BanqueActor extends AbstractActor {
 		ods.setPassword("cb778525");
 		
 		try {
-			this.connexion = ods.getConnection();
+			this.connexion = ods.getConnection(); //On obtient la connexion
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
-		//this.connexion = DriverManager.getConnection("jdbc:mysql://db4free.net:3306/gestionbancaire","cb778525","cb778525");
 		this.statement = this.connexion.createStatement();
 		
+		//On créer les acteurs de persistances à qui on passe la connexion
+		//et le statement car ils en auront besoin pour l'enregistrement dans la bdd
 		this.routerPersistance = getContext().actorOf(new BalancingPool(50).props(PersistanceActor.props(this.connexion,this.statement)));		
 		
+		//On créer la liste des banquier en allant la chercher dans la base de données
 		this.banquierListe = new HashMap<Integer,ActorRef>();
 		ResultSet res = statement.executeQuery("select * from banquier");
 		while(res.next()) {
+			//Chaque banquier à accès à la au pool d'acteur de persistances pour leurs envoyer des demande d'enregistrement en bdd
 			this.banquierListe.put(Integer.parseInt(res.getString("id")),getContext().actorOf(BanquierActor.props(routerPersistance)));
 		}
 		
 	}
 
-	// Mï¿½thode servant ï¿½ dï¿½terminer le comportement de l'acteur lorsqu'il reï¿½oit un message
+	// Méthode servant à déterminer le comportement de l'acteur lorsqu'il reçoit un message
 		@Override
 		public Receive createReceive() {
 			return receiveBuilder()
@@ -64,16 +68,19 @@ public class BanqueActor extends AbstractActor {
 					.build();
 		}
 		
+		//Récupère le compte du client et lui renvoie
 		private void Connexion(ActorRef client,final ClientActor.Connexion message) throws SQLException {
 			ResultSet res = statement.executeQuery("select * from compte where client="+message.id+"");
 			res.next();
 			client.tell(new Compte((Integer.parseInt(res.getString("solde"))),(Integer.parseInt(res.getString("id"))),(Integer.parseInt(res.getString("banquier")))), getSelf());
 		}
 		
+		//Passe le message d'ajout du client au banquier responsable du compte
 		private void Ajout(final ClientActor.Ajout message) {		
 			this.banquierListe.get(message.compte.getBanquier()).forward(message, getContext());
 		}
-
+		
+		//Passe le message de retrait du client au banquier responsable du compte
 		private void Retrait(final ClientActor.Retrait message) {
 			this.banquierListe.get(message.compte.getBanquier()).forward(message, getContext());
 		}

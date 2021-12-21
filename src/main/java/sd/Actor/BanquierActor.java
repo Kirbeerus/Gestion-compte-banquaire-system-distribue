@@ -11,6 +11,7 @@ import akka.actor.ActorRef;
 
 public class BanquierActor extends AbstractActor{
 
+	//Le pool d'acteur de persistance à qui il donne des ordres.
 	private static ActorRef routerPersistance = null;
 	
 	public BanquierActor(ActorRef routerPersistance){
@@ -31,6 +32,7 @@ public class BanquierActor extends AbstractActor{
 
 			private void Ajout(final ClientActor.Ajout message,ActorRef client) {
 				message.compte.AjouterMontant(message.montantAjout);
+				//On demande au persistancesActor d'enregistrer les modifications dans la base de données
 				BanquierActor.routerPersistance.tell(new Enregistrement(message.compte), ActorRef.noSender());
 				client.tell(message.compte,getSelf()); //On renvoie au client son compte mis a jour avec la nouvelle somme
 			}

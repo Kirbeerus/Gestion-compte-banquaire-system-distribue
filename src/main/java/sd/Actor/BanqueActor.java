@@ -87,8 +87,11 @@ public class BanqueActor extends AbstractActor {
 		}
 		
 		private void stopConnexion() throws SQLException {
+			this.banquierListe = null;
+			this.routerPersistance = null;
 			this.statement.close();
-			this.connexion.close();		}
+			this.connexion.close();		
+		}
 		
 		
 		// M�thode servant � la cr�ation d'un acteur

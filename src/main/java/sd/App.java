@@ -15,7 +15,7 @@ import akka.routing.RoundRobinPool;
 import sd.Actor.*;
 
 public class App {
-	public static void main(String[] args){
+	public static void main(String[] args) throws InterruptedException{
 		ActorSystem actorSystem = ActorSystem.create();
      
         ActorRef banque = actorSystem.actorOf(BanqueActor.props()); //Création de la banque
@@ -75,6 +75,7 @@ public class App {
 			
         }
         
+
         // Arrêt du système d'acteurs
         actorSystem.terminate();
         

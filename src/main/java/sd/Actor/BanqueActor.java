@@ -89,7 +89,7 @@ public class BanqueActor extends AbstractActor {
 		private void stopConnexion() throws SQLException {
 			this.banquierListe = null;
 			this.routerPersistance = null;
-			this.statement.close();
+			//this.connexion.rollback();	
 			this.connexion.close();		
 		}
 		

@@ -28,8 +28,9 @@ public class AppMultiClient {
 
         
 
-        //10 000 demande de retrait-----------------------------------------------------
-        for(int i = 0;i<10000;i++) {
+      //Initialisation du programme ---------------------------------------------------
+        //On fait beaucoup demandes au debut pour avoir un solde assez grand et être sur que la connexion fonctionne bien 
+        for(int i = 0;i<1000;i++) {
         	for(int j=0;j<=9;j++) {
         		clientListe.get(j).tell(new ClientActor.StartAjout(), ActorRef.noSender());
         	} 
@@ -219,8 +220,6 @@ public class AppMultiClient {
 
           clientListe.get(0).tell(new ClientActor.AfficherSoldeTemps(startTime), ActorRef.noSender());
 
-          banque.tell(new BanqueActor.stopConnexion(), ActorRef.noSender());
-          Thread.sleep(200);
         // Arrêt du système d'acteurs
         actorSystem.terminate();
         

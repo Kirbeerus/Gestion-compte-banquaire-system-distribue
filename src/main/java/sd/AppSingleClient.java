@@ -203,8 +203,7 @@ public class AppSingleClient {
 
           client.tell(new ClientActor.AfficherSoldeTemps(startTime), ActorRef.noSender());
 
-          banque.tell(new BanqueActor.stopConnexion(), ActorRef.noSender());
-          Thread.sleep(200);
+
         // Arrêt du système d'acteurs
         actorSystem.terminate();
         

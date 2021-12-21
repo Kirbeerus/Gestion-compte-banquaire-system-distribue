@@ -17,13 +17,13 @@ public class PersistanceActor extends AbstractActor{
 	//Le persistanceActor enregistre en bdd donc il a besoin des connexion
 	private Connection connexion;
 	private Statement statement;
-	private PreparedStatement preparedStmt;
+	//private PreparedStatement preparedStmt;
 	
 	public PersistanceActor(Connection connexion, Statement statement) throws SQLException {
 		this.connexion = connexion;
 		this.statement = statement;
 		//On prépare la requete en avance pour que le code soit plus rapide
-		this.preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
+		//this.preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
 	}
 	
 	// Méthode servant à déterminer le comportement de l'acteur lorsqu'il reçoit un message
@@ -36,9 +36,11 @@ public class PersistanceActor extends AbstractActor{
 			
 			//On enregistre en bdd en passant les paramètre à la requête.
 			private void Enregistrement(final BanquierActor.Enregistrement message) throws SQLException {
+				PreparedStatement preparedStmt = this.connexion.prepareStatement("UPDATE compte SET solde = ? WHERE id = ?");
 				preparedStmt.setInt(1,(message.compte.getSomme()));
 			    preparedStmt.setInt(2, message.compte.getId());
 			    preparedStmt.executeUpdate();
+			    preparedStmt.close();
 			}
 
 			

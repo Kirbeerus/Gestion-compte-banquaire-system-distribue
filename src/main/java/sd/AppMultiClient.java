@@ -224,5 +224,7 @@ public class AppMultiClient {
         // Arrêt du système d'acteurs
         actorSystem.terminate();
         
+        System.exit(0);
+        
 	}
 } 

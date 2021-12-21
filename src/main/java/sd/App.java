@@ -77,5 +77,7 @@ public class App {
         
         // Arrêt du système d'acteurs
         actorSystem.terminate();
+        
+        System.exit(0);
 	}
 }

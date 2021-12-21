@@ -207,5 +207,7 @@ public class AppSingleClient {
           Thread.sleep(200);
         // Arrêt du système d'acteurs
         actorSystem.terminate();
+        
+        System.exit(0);
 	}
 } 

@@ -90,7 +90,7 @@ public class ClientActor extends AbstractActor {
 		//On affiche le solde du compte et le temps d'éxécution
 		private void AfficherSolde(final AfficherSoldeTemps message) {
 			System.out.println("Solde du compte "+this.compte.getId()+" : "+this.compte.getSomme());
-			System.out.println(" Temps d'éxécution "+(this.time-message.temps));
+			System.out.println(" Temps d'éxécution "+(this.time-message.temps+" Millisecondes"));
 			
 		}
 		

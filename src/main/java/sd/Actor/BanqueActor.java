@@ -65,6 +65,7 @@ public class BanqueActor extends AbstractActor {
 					.match(ClientActor.Connexion.class, message -> Connexion(getSender(),message))
 					.match(ClientActor.Ajout.class, message -> Ajout(message))
 					.match(ClientActor.Retrait.class, message -> Retrait(message))
+					.match(stopConnexion.class, message -> stopConnexion())
 					.build();
 		}
 		
@@ -85,6 +86,10 @@ public class BanqueActor extends AbstractActor {
 			this.banquierListe.get(message.compte.getBanquier()).forward(message, getContext());
 		}
 		
+		private void stopConnexion() throws SQLException {
+			this.statement.close();
+			this.connexion.close();		}
+		
 		
 		// M�thode servant � la cr�ation d'un acteur
 		public static Props props() {
@@ -94,5 +99,9 @@ public class BanqueActor extends AbstractActor {
 		
 		// D�finition des messages en inner classes
 		public interface Message {}
+		
+		public static class stopConnexion implements Message{
+			public stopConnexion() {}
+		}
 		
 }

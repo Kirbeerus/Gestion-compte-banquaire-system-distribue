@@ -24,11 +24,13 @@ public class AppSingleClient {
         client.tell(new ClientActor.Connexion(0), ActorRef.noSender());
 
 
-        //Initialisation du programme---------------------------------------------------
+        //Initialisation du programme ---------------------------------------------------
+        //On fait beaucoup demandes au debut pour avoir un solde assez grand et être sur que la connexion fonctionne bien 
         for(int i = 0;i<10000;i++) {
         	client.tell(new ClientActor.StartAjout(), ActorRef.noSender());
         }
 
+        //On attend que tout les message soit bien consommer
         try {
 			Thread.sleep(5000);
 		} catch (InterruptedException e) {
@@ -43,15 +45,16 @@ public class AppSingleClient {
         for(int i = 0;i<10;i++) {
         	client.tell(new ClientActor.StartRetirer(), ActorRef.noSender());
         }
-
+        //On attend que les demandes soit bien consommer avant de faire les autres test
         try {
 			Thread.sleep(3000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 
+        //On affiche le nouveau solde et le temps d'éxécution
         client.tell(new ClientActor.AfficherSoldeTemps(startTime), ActorRef.noSender());
-        
+        //On attend pour que l'affichage soit bien fait
 		Thread.sleep(100);
 		
         startTime = System.currentTimeMillis();
@@ -200,6 +203,8 @@ public class AppSingleClient {
 
           client.tell(new ClientActor.AfficherSoldeTemps(startTime), ActorRef.noSender());
 
+          banque.tell(new BanqueActor.stopConnexion(), ActorRef.noSender());
+          Thread.sleep(200);
         // Arrêt du système d'acteurs
         actorSystem.terminate();
 	}
